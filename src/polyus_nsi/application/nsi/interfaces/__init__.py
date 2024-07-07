@@ -1,0 +1,1 @@
+from .industrial_structure_repo import IIndustrialStructureRepo

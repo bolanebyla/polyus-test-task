@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    image: 'postgres:16'
+    ports:
+      - '${POSTGRES_PORT:-8500}:5432'
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-polyus-test-task}
+      - POSTGRES_USER=${POSTGRES_USER:-polyus-test-task}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-polyus-test-task}
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: 50m
