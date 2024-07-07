@@ -1,9 +1,12 @@
 from typing import List
 
 from attr import frozen
-from sqlalchemy import literal, select
+from sqlalchemy import insert, literal, select
 
 from polyus_nsi.adapters.database.tables import industrial_structure_edges_table
+from polyus_nsi.application.nsi.dtos.industrial_structure import (
+    CreateIndustrialStructureItemRequestDto,
+)
 from polyus_nsi.application.nsi.entities.industrial_structure import (
     IndustrialStructureItem,
 )
@@ -108,3 +111,25 @@ class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
 
         result = await self.session.scalars(q)
         return result.all()
+
+    async def create(
+        self,
+        create_dto: CreateIndustrialStructureItemRequestDto,
+    ):
+        result = await self.session.scalars(
+            insert(IndustrialStructureItem).returning(IndustrialStructureItem),
+            {
+                'name': create_dto.name,
+            }
+        )
+        item = result.one()
+
+        if create_dto.parent_id is not None:
+            # yapf: disable
+            await self.session.execute(
+                insert(industrial_structure_edges_table), {
+                    'previous_industrial_structure_item_id': create_dto.parent_id,  # noqa
+                    'next_industrial_structure_item_id': item.id
+                }
+            )
+            # yapf: enable

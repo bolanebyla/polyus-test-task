@@ -2,6 +2,9 @@ from typing import List
 
 from attr import frozen
 
+from polyus_nsi.application.nsi.dtos.industrial_structure import (
+    CreateIndustrialStructureItemRequestDto,
+)
 from polyus_nsi.application.nsi.entities.industrial_structure import (
     IndustrialStructureItem,
 )
@@ -33,3 +36,9 @@ class IndustrialStructureService:
             depth=depth,
         )
         return child_items
+
+    async def create_industrial_structure_item(
+        self,
+        create_dto: CreateIndustrialStructureItemRequestDto,
+    ):
+        await self.industrial_structure_repo.create(create_dto=create_dto, )
