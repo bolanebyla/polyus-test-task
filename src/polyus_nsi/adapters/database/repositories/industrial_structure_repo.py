@@ -108,6 +108,7 @@ class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
             insert(IndustrialStructureItem).returning(IndustrialStructureItem),
             {
                 'name': create_dto.name,
+                'type': create_dto.type,
             }
         )
         item = result.one()
@@ -116,6 +117,6 @@ class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
             await self.session.execute(
                 insert(industrial_structure_edges_table), {
                     'previous_item_id': create_dto.parent_id,
-                    'next_item_id': item.id
+                    'next_item_id': item.id,
                 }
             )
