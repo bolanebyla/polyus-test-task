@@ -10,10 +10,10 @@ from polyus_nsi.application.nsi.dtos.industrial_structure import (
 )
 from polyus_nsi.application.nsi.services import IndustrialStructureService
 
-nsi_router = APIRouter(prefix='/nsi')
+industrial_structure_router = APIRouter(prefix='/industrial_structure')
 
 
-@nsi_router.get('/get_all_parent_items')
+@industrial_structure_router.get('/get_all_parent_items')
 async def get_all_parent_items(
     item_id: int,
     depth: int,
@@ -28,7 +28,7 @@ async def get_all_parent_items(
     return parent_items
 
 
-@nsi_router.get('/get_all_child_items')
+@industrial_structure_router.get('/get_all_child_items')
 async def get_all_child_items(
     item_id: int,
     depth: int,
@@ -43,7 +43,7 @@ async def get_all_child_items(
     return child_items
 
 
-@nsi_router.post('/create')
+@industrial_structure_router.post('/create')
 async def create(
     create_request: CreateIndustrialStructureItemRequestDto,
     industrial_structure_service: Annotated[

@@ -1,1 +1,1 @@
-from .nsi import nsi_router
+from .industrial_structure import industrial_structure_router

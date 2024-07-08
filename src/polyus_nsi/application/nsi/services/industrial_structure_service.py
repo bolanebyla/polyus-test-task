@@ -13,6 +13,9 @@ from polyus_nsi.application.nsi.interfaces import IIndustrialStructureRepo
 
 @frozen
 class IndustrialStructureService:
+    """
+    Сервис для работы со структурой производства
+    """
     industrial_structure_repo: IIndustrialStructureRepo
 
     async def get_all_parent_items(
@@ -20,6 +23,13 @@ class IndustrialStructureService:
         item_id: int,
         depth: int,
     ) -> List[IndustrialStructureItem]:
+        """
+        Получает все родительские элементы произвольного уровня
+
+        :param item_id: идентификатор элемента
+        для которого нужно вернуть родителей
+        :param depth: глубина
+        """
         parent_items = await self.industrial_structure_repo.get_all_parent_items( # noqa
             item_id=item_id,
             depth=depth,
@@ -31,6 +41,13 @@ class IndustrialStructureService:
         item_id: int,
         depth: int,
     ) -> List[IndustrialStructureItem]:
+        """
+        Получает все дочерние элементы произвольного уровня
+
+        :param item_id: идентификатор элемента
+        для которого нужно вернуть потомков
+        :param depth: глубина
+        """
         child_items = await self.industrial_structure_repo.get_all_child_items(
             item_id=item_id,
             depth=depth,
@@ -41,4 +58,7 @@ class IndustrialStructureService:
         self,
         create_dto: CreateIndustrialStructureItemRequestDto,
     ):
-        await self.industrial_structure_repo.create(create_dto=create_dto, )
+        """
+        Создаёт элемент структуры производства
+        """
+        await self.industrial_structure_repo.create(create_dto=create_dto)

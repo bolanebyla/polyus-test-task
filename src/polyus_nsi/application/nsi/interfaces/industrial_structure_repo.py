@@ -10,6 +10,9 @@ from polyus_nsi.application.nsi.entities.industrial_structure import (
 
 
 class IIndustrialStructureRepo(ABC):
+    """
+    Репозиторий для работы со структурой производства
+    """
 
     @abstractmethod
     async def get_all_parent_items(
@@ -17,6 +20,13 @@ class IIndustrialStructureRepo(ABC):
         item_id: int,
         depth: int,
     ) -> List[IndustrialStructureItem]:
+        """
+        Получает все родительские элементы произвольного уровня
+
+        :param item_id: идентификатор элемента
+        для которого нужно вернуть родителей
+        :param depth: глубина
+        """
         ...
 
     @abstractmethod
@@ -25,6 +35,13 @@ class IIndustrialStructureRepo(ABC):
         item_id: int,
         depth: int,
     ) -> List[IndustrialStructureItem]:
+        """
+        Получает все дочерние элементы произвольного уровня
+
+        :param item_id: идентификатор элемента
+        для которого нужно вернуть потомков
+        :param depth: глубина
+        """
         ...
 
     @abstractmethod
@@ -32,4 +49,7 @@ class IIndustrialStructureRepo(ABC):
         self,
         create_dto: CreateIndustrialStructureItemRequestDto,
     ):
+        """
+        Создаёт элемент структуры производства
+        """
         ...
