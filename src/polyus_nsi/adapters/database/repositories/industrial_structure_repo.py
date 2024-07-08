@@ -18,99 +18,87 @@ from .base import AsyncBaseRepo
 @frozen
 class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
 
+    async def _get_all_parent_or_child_items(
+        self,
+        item_id: int,
+        depth: int,
+        parent: bool,
+    ) -> List[IndustrialStructureItem]:
+        edges_alias = industrial_structure_edges_table.alias()
+
+        top_q = select(
+            edges_alias.c.previous_item_id, edges_alias.c.next_item_id,
+            literal(1).label('depth')
+        )
+
+        if parent:
+            top_q = top_q.where(edges_alias.c.next_item_id == item_id)
+        else:
+            top_q = top_q.where(edges_alias.c.previous_item_id == item_id)
+
+        top_q = top_q.cte('al_tree', recursive=True)
+
+        top_q_alias = top_q.alias()
+
+        bottom_q = select(
+            edges_alias.c.previous_item_id, edges_alias.c.next_item_id,
+            top_q_alias.c.depth + 1
+        )
+
+        if parent:
+            bottom_q = bottom_q.where(
+                edges_alias.c.next_item_id == top_q_alias.c.previous_item_id
+            )
+        else:
+            bottom_q = bottom_q.where(
+                edges_alias.c.previous_item_id == top_q_alias.c.next_item_id
+            )
+
+        rec_q = top_q.union(bottom_q)
+
+        q = select(IndustrialStructureItem, ).where(rec_q.c.depth == depth)
+
+        if parent:
+            q = q.select_from(
+                rec_q.join(
+                    IndustrialStructureItem,
+                    rec_q.c.previous_item_id == IndustrialStructureItem.id,
+                )
+            )
+        else:
+            q = q.select_from(
+                rec_q.join(
+                    IndustrialStructureItem,
+                    rec_q.c.next_item_id == IndustrialStructureItem.id,
+                )
+            )
+
+        result = await self.session.scalars(q)
+        return result.all()    # noqa
+
     async def get_all_parent_items(
         self,
         item_id: int,
         depth: int,
     ) -> List[IndustrialStructureItem]:
-        top_q = select(
-            industrial_structure_edges_table.c.
-            previous_industrial_structure_item_id,
-            industrial_structure_edges_table.c.
-            next_industrial_structure_item_id,
-            literal(1).label('depth')
-        ).where(
-            industrial_structure_edges_table.c.next_industrial_structure_item_id
-            == item_id
-        ).cte(
-            'al_tree', recursive=True
+        parent_items = await self._get_all_parent_or_child_items(
+            item_id=item_id,
+            depth=depth,
+            parent=True,
         )
-
-        top_q_alias = top_q.alias()
-
-        # yapf: disable
-        bottom_q = select(
-            industrial_structure_edges_table.c.
-            previous_industrial_structure_item_id,
-            industrial_structure_edges_table.c.
-            next_industrial_structure_item_id, top_q_alias.c.depth + 1
-        ).where(
-            industrial_structure_edges_table.c.next_industrial_structure_item_id == top_q_alias.c.previous_industrial_structure_item_id    # noqa
-        )
-        # yapf: enable
-
-        recursive_q = top_q.union(bottom_q)
-
-        # yapf: disable
-        q = select(
-            IndustrialStructureItem,
-        ).select_from(
-            recursive_q.join(
-                IndustrialStructureItem,
-                recursive_q.c.previous_industrial_structure_item_id == IndustrialStructureItem.id,    # noqa
-            )
-        ).where(recursive_q.c.depth == depth)
-        # yapf: enable
-
-        result = await self.session.scalars(q)
-        return result.all()
+        return parent_items
 
     async def get_all_child_items(
         self,
         item_id: int,
         depth: int,
     ) -> List[IndustrialStructureItem]:
-        top_q = select(
-            industrial_structure_edges_table.c.
-            previous_industrial_structure_item_id,
-            industrial_structure_edges_table.c.
-            next_industrial_structure_item_id,
-            literal(1).label('depth')
-        ).where(
-            industrial_structure_edges_table.c.
-            previous_industrial_structure_item_id == item_id
-        ).cte(
-            'al_tree', recursive=True
+        child_items = await self._get_all_parent_or_child_items(
+            item_id=item_id,
+            depth=depth,
+            parent=False,
         )
-
-        top_q_alias = top_q.alias()
-
-        # yapf: disable
-        bottom_q = select(
-            industrial_structure_edges_table.c.
-            previous_industrial_structure_item_id,
-            industrial_structure_edges_table.c.
-            next_industrial_structure_item_id, top_q_alias.c.depth + 1
-        ).where(
-            industrial_structure_edges_table.c.previous_industrial_structure_item_id == top_q_alias.c.next_industrial_structure_item_id    # noqa
-        )
-        # yapf: enable
-
-        recursive_q = top_q.union(bottom_q)
-
-        # yapf: disable
-        q = select(
-            IndustrialStructureItem,
-        ).select_from(
-            recursive_q.join(
-                IndustrialStructureItem,
-                recursive_q.c.next_industrial_structure_item_id == IndustrialStructureItem.id,    # noqa
-            )
-        ).where(recursive_q.c.depth == depth)
-        # yapf: enable
-
-        result = await self.session.scalars(q)
-        return result.all()
+        return child_items
 
     async def create(
         self,
@@ -125,11 +113,9 @@ class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
         item = result.one()
 
         if create_dto.parent_id is not None:
-            # yapf: disable
             await self.session.execute(
                 insert(industrial_structure_edges_table), {
-                    'previous_industrial_structure_item_id': create_dto.parent_id,  # noqa
-                    'next_industrial_structure_item_id': item.id
+                    'previous_item_id': create_dto.parent_id,
+                    'next_item_id': item.id
                 }
             )
-            # yapf: enable
