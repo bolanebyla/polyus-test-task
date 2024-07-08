@@ -2,16 +2,12 @@ import sys
 
 from alembic.config import CommandLine, Config
 
-from polyus_nsi.adapters import database, log
+from polyus_nsi.adapters import database
 
 
 class Settings:
     db = database.DBSettings()
     alembic = database.AlembicSettings()
-
-
-class Logger:
-    log.configure(Settings.db.LOGGING_CONFIG)
 
 
 def make_config():
@@ -32,8 +28,6 @@ def make_config():
 
 
 def run_cmd(*args):
-    log.configure(Settings.db.LOGGING_CONFIG)
-
     cli = CommandLine()
     cli.run_cmd(make_config(), cli.parser.parse_args(args))
 

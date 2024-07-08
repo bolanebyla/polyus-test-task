@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from polyus_nsi.adapters import database, log
+from polyus_nsi.adapters import database
 from polyus_nsi.adapters.database.repositories import IndustrialStructureRepo
 from polyus_nsi.application.nsi.services import IndustrialStructureService
 
@@ -13,10 +13,6 @@ class DB:
 
     engine = database.create_engine_from_settings(settings=settings)
     session_factory = database.create_session_factory(engine=engine)
-
-
-class Logger:
-    log.configure(DB.settings.LOGGING_CONFIG)
 
 
 async def get_db_session() -> AsyncSession:

@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  db:
+    image: 'postgres:16'
+    ports:
+      - '${POSTGRES_PORT:-8500}:5432'
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-polyus-test-task}
+      - POSTGRES_USER=${POSTGRES_USER:-polyus-test-task}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-polyus-test-task}
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    logging:
+      options:
+        max-size: 50m
+  db-migrations:
+    build:
+      dockerfile: ./deployment/Dockerfile
+    entrypoint:
+      - 'entrypoint_db_migrate.sh'
+    environment:
+      DB_URL: postgresql+asyncpg://${POSTGRES_USER:-polyus-test-task}:${POSTGRES_PASSWORD:-polyus-test-task}@db:5432/${POSTGRES_DB:-polyus-test-task}
+  api:
+    build:
+      dockerfile: ./deployment/Dockerfile
+    ports:
+      - '8000:8080'
+    entrypoint:
+      - 'entrypoint_api.sh'
+    depends_on:
+      - db-migrations
+    environment:
+      DB_URL: postgresql+asyncpg://${POSTGRES_USER:-polyus-test-task}:${POSTGRES_PASSWORD:-polyus-test-task}@db:5432/${POSTGRES_DB:-polyus-test-task}
