@@ -8,6 +8,10 @@ from polyus_nsi.application.nsi.dtos.industrial_structure import (
 from polyus_nsi.application.nsi.entities.industrial_structure import (
     IndustrialStructureItem,
 )
+from polyus_nsi.application.nsi.enums import IndustrialStructureTypes
+from polyus_nsi.application.nsi.errors import (
+    IndustrialStructureItemByIdNotFound,
+)
 from polyus_nsi.application.nsi.interfaces import IIndustrialStructureRepo
 
 
@@ -57,8 +61,33 @@ class IndustrialStructureService:
     async def create_industrial_structure_item(
         self,
         create_dto: CreateIndustrialStructureItemRequestDto,
-    ):
+    ) -> IndustrialStructureItem:
         """
         Создаёт элемент структуры производства
         """
-        await self.industrial_structure_repo.create(create_dto=create_dto)
+        return await self.industrial_structure_repo.create(
+            create_dto=create_dto
+        )
+
+    async def get_by_id(self, id_) -> IndustrialStructureItem:
+        """
+        Получает запись по идентификатору
+
+        :exception IndustrialStructureItemByIdNotFound
+        """
+        item = await self.industrial_structure_repo.get_by_id(id_=id_)
+
+        if item is None:
+            raise IndustrialStructureItemByIdNotFound(id_=id_)
+        return item
+
+    async def get_all_by_type(
+        self, industrial_structure_type: IndustrialStructureTypes
+    ) -> List[IndustrialStructureItem]:
+        """
+        Получает список элементов структуры производства по типу
+        """
+        items = await self.industrial_structure_repo.get_all_by_type(
+            industrial_structure_type=industrial_structure_type
+        )
+        return items

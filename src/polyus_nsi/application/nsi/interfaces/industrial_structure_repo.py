@@ -7,6 +7,7 @@ from polyus_nsi.application.nsi.dtos.industrial_structure import (
 from polyus_nsi.application.nsi.entities.industrial_structure import (
     IndustrialStructureItem,
 )
+from polyus_nsi.application.nsi.enums import IndustrialStructureTypes
 
 
 class IIndustrialStructureRepo(ABC):
@@ -48,8 +49,25 @@ class IIndustrialStructureRepo(ABC):
     async def create(
         self,
         create_dto: CreateIndustrialStructureItemRequestDto,
-    ):
+    ) -> IndustrialStructureItem:
         """
         Создаёт элемент структуры производства
+        """
+        ...
+
+    @abstractmethod
+    async def get_by_id(self, id_: int) -> IndustrialStructureItem | None:
+        """
+        Получает структуру производства по идентификатору
+        """
+        ...
+
+    @abstractmethod
+    async def get_all_by_type(
+        self,
+        industrial_structure_type: IndustrialStructureTypes,
+    ) -> List[IndustrialStructureItem]:
+        """
+        Получает список элементов структуры производства по типу
         """
         ...

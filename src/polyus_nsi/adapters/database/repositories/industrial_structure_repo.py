@@ -10,6 +10,7 @@ from polyus_nsi.application.nsi.dtos.industrial_structure import (
 from polyus_nsi.application.nsi.entities.industrial_structure import (
     IndustrialStructureItem,
 )
+from polyus_nsi.application.nsi.enums import IndustrialStructureTypes
 from polyus_nsi.application.nsi.interfaces import IIndustrialStructureRepo
 
 from .base import AsyncBaseRepo
@@ -103,7 +104,7 @@ class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
     async def create(
         self,
         create_dto: CreateIndustrialStructureItemRequestDto,
-    ):
+    ) -> IndustrialStructureItem:
         result = await self.session.scalars(
             insert(IndustrialStructureItem).returning(IndustrialStructureItem),
             {
@@ -120,3 +121,19 @@ class IndustrialStructureRepo(IIndustrialStructureRepo, AsyncBaseRepo):
                     'next_item_id': item.id,
                 }
             )
+
+        return item
+
+    async def get_by_id(self, id_: int) -> IndustrialStructureItem | None:
+        return await self.session.get(IndustrialStructureItem, id_)
+
+    async def get_all_by_type(
+        self,
+        industrial_structure_type: IndustrialStructureTypes,
+    ) -> List[IndustrialStructureItem]:
+
+        query = select(IndustrialStructureItem).where(
+            IndustrialStructureItem.type == industrial_structure_type
+        )
+        result = await self.session.scalars(query)
+        return result.all()

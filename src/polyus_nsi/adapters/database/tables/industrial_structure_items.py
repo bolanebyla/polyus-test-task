@@ -22,5 +22,6 @@ industrial_structure_items_table = sa.Table(
         INDUSTRIAL_STRUCTURE_TYPES_ENUM,
         nullable=False,
         comment='Тип',
+        index=True,
     ),
 )

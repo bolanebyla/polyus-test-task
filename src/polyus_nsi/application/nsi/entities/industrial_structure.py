@@ -8,6 +8,6 @@ class IndustrialStructureItem:
     """
     Элемент структуры производства
     """
-    title: str
+    name: str
     type: IndustrialStructureTypes
     id: int | None = None
